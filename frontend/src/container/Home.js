@@ -1,9 +1,28 @@
 import React from 'react';
+import Image from 'react-bootstrap/Image';
 
-export default function home() {
+import BoardEntry from '../component/BoardEntry';
+
+// TODO : get articles from DB, using props.numArticles
+export default function Home(props) {
   return (
     <div>
-      <p>home sweet home</p>
+      <Image
+        src="sknc.jpg" alt="sknc"
+        style={{
+          // image does not go out of view
+          maxWidth: "100%",
+          // image size cap
+          maxHeight: "500px",
+          // horizontal center
+          display: "block",
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
+      />
+      {/* what's new OR recommended OR trending OR random article for you 
+          OR ... */}
+      <BoardEntry boardName={"what's new"} articles={[]} />
     </div>
   )
 }
