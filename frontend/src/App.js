@@ -9,6 +9,7 @@ import Home from './container/Home';
 import Boards from './container/Boards';
 import Admin from './container/Admin';
 import NotFound from './container/NotFound';
+import Draft from './container/Draft';
 
 import NavBar from './component/NavBar';
 import { boards, numArticlesOnHeader } from './settings';
@@ -50,6 +51,9 @@ function App() {
                 })
               }
               <Route path="/admin" exact component={Admin} />
+
+              {/* TODO : requires authentication ! */}
+              <Route path="/draft" exact component={Draft} />
               <Route component={NotFound} />
             </Switch>
           </BrowserRouter>

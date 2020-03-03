@@ -14,3 +14,6 @@ func main() {
 	})
 	r.Run(":8080")
 }
+
+// TODO : GORM
+// TODO : admin authentication

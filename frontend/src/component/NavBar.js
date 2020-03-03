@@ -5,6 +5,7 @@ import Nav from 'react-bootstrap/Nav';
 import { title } from '../settings';
 
 // TODO : admin logout, font size modification, En/Ko, etc
+
 const NavBar = (props) => {
   const { boardNames } = props;
   return (
