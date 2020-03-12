@@ -1,10 +1,13 @@
 import React from 'react';
+import { connect } from 'react-redux';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 import Button from 'react-bootstrap/Button';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
+
+import { signout } from '../action/user';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKey } from '@fortawesome/free-solid-svg-icons';
@@ -19,11 +22,7 @@ const NavBar = (props) => {
   const loggedIn = true;
   const admin = true;
 
-  const signout = () => {
-    // TODO : do actual signout
-    console.log("sign out")
-  }
-
+  const { signout } = props;
 
   const overlayBundle = (
     // TODO : logout
@@ -89,4 +88,13 @@ const NavBar = (props) => {
   )
 }
 
-export default NavBar;
+const mapDispatchToProps = (dispatch) => ({
+  signout: () => dispatch(
+    signout(),
+  ),
+});
+
+export default connect(
+  null,
+  mapDispatchToProps,
+)(NavBar);

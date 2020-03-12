@@ -27,7 +27,13 @@ export const signin = (username, password) => (dispatch) => {
 };
 
 export const signout = () => (dispatch) => {
-
+  axios.get(v1port + "/signout").then((res) => {
+    console.log(res)
+    console.log('signout succeeded')
+  }).catch((err) => {
+    console.log(err)
+    console.log('signout failed')
+  })
 };
 
 export const changePassword = () => (dispatch) => {

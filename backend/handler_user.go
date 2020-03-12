@@ -79,8 +79,6 @@ func signin(c *gin.Context) {
 	username := data.Username
 	password := data.Password
 
-	fmt.Println(username)
-	fmt.Println(password)
 	// Validate form input
 	if checkUsernameToReturn(c, username) {
 		return
@@ -102,11 +100,9 @@ func signin(c *gin.Context) {
 
 	// Check for username and password
 	if user.Username != username || user.Password != encoded {
-		fmt.Println("wrong!")
 		c.Status(http.StatusUnauthorized)
 		return
 	}
-	fmt.Println("going on...")
 
 	// Save relevant info in session
 	s := sessions.Default(c)

@@ -4,6 +4,7 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -29,6 +30,9 @@ func main() {
 	// gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()
+	// r.Static("/", "/Users/lightb0x/Documents/workspace/sknc/frontend/build")
+	r.Use(static.Serve("/", static.LocalFile("../frontend/build", true)))
+	// r.Use(static.Serve("/main", static.LocalFile("../frontend/build", true)))
 
 	// TODO : DELETE FOLLOWING LINE WHEN DEPLOYING
 	r.Use(cors.Default()) // CORS allow-all : ONLY FOR DEV MODE
