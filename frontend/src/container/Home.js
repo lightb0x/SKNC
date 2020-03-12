@@ -1,10 +1,17 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import Image from 'react-bootstrap/Image';
 
 import BoardEntry from '../component/BoardEntry';
 
+import { fetchArticleList } from '../action/article';
+
 // TODO : get articles from DB, using props.numArticles
-export default function Home(props) {
+function Home(props) {
+  console.log('before')
+  props.fetch(10);
+  console.log('after')
+  console.log(props.storedArticle)
   return (
     <div>
       <Image
@@ -26,3 +33,18 @@ export default function Home(props) {
     </div>
   )
 }
+
+const mapStateToProps = (state) => ({
+  storedArticle: state.article.article,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  fetch: (id) => dispatch(
+    fetchArticleList(id),
+  ),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Home);

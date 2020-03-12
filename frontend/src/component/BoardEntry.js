@@ -19,8 +19,21 @@ import PropTypes from 'prop-types';
 import { boards, searchType } from '../settings';
 
 export default function BoardEntry(props) {
-  const { articles, boardName, search } = props;
-  const description = boards[boardName];
+  const { articles, boardName } = props;
+  // const boardName = props.match.path.slice(1);
+  const board = boards[boardName];
+  let description, search, load, header;
+  if (board === undefined) {
+    description = null;
+    search = false;
+    load = false;
+    header = boardName
+  } else {
+    description = board[1];
+    search = true;
+    load = true;
+    header = boards[boardName][0]
+  }
 
   const [searchT, setSearchT] = useState(searchType[0]);
   const [searchBy, setSearchBy] = useState('');
@@ -35,7 +48,10 @@ export default function BoardEntry(props) {
 
   return (
     <div>
-      <h3>{boardName}{description ? <br /> : ''}<b>{description}</b></h3>
+      <h3>
+        {header}
+        {description ? <br /> : ''}<b>{description}</b>
+      </h3>
       {
         search
           ? (
@@ -72,23 +88,20 @@ export default function BoardEntry(props) {
           )
           : <hr />
       }
-      {
+      {/* TODO : https://www.npmjs.com/package/react-infinite-scroller */}
+      {/*        if load === true */}
+      {/* {
         articles.map(function (item) {
           return (
             <ArticleEntry article={item} />
           )
         })
-      }
+      } */}
     </div>
   );
 }
 
-BoardEntry.defaultProps = {
-  search: false,
-};
-
 BoardEntry.propTypes = {
   articles: PropTypes.array.isRequired,
   boardName: PropTypes.string.isRequired,
-  search: PropTypes.bool.isRequired,
 };

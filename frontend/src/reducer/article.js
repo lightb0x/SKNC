@@ -6,10 +6,26 @@ import {
   DELETE_ARTICLE,
 } from '../action/types';
 
+// TODO : separate draft from article
 const initialState = {
-  draftImgs: [],
-  draftHTML: "",
-  article: {},
+  article: {
+    // boardname": article.Boardname,
+    // "writer":    writer.Username,
+    // "title":     article.Title,
+    // "content":   article.Content,
+    // "count":     article.Count + 1,
+    // "createdAt": article.CreatedAt,
+    // "updatedAt": article.UpdatedAt,
+    // "isUpdated": article.UpdatedAt.After(article.CreatedAt),
+    'boardname': '',
+    'writer': '',
+    'title': '',
+    'content': '',
+    'count': 0,
+    'createdAt': Date(),
+    'updatedAt': Date(),
+    "isUpdated": false
+  },
   articleList: [],
 };
 

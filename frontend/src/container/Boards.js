@@ -8,7 +8,7 @@ export default function Boards(props) {
   return (
     <div>
       <br />
-      <BoardEntry boardName={boardName} articles={[]} search />
+      <BoardEntry boardName={boardName} articles={[]} />
     </div>
   )
 }
