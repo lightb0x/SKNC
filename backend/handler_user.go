@@ -112,7 +112,10 @@ func signin(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Successfully logged in"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Successfully signed in",
+		rolekey: user.Role,
+	})
 }
 
 func signout(c *gin.Context) {

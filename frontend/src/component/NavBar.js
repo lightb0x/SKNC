@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
+import Cookies from 'js-cookie';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -7,27 +8,29 @@ import Button from 'react-bootstrap/Button';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 
-import { signout } from '../action/user';
+import { signout, getRole } from '../action/user';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKey } from '@fortawesome/free-solid-svg-icons';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 
-import { title, boards } from '../settings';
+import { title, boards, cookieLogin, adminRole } from '../settings';
 
 
 const NavBar = (props) => {
   // TODO : this is not working; maybe because this is component?
   // TODO : useLocation() to get current url ?
-  const loggedIn = true;
-  const admin = true;
+  const { signout, role, getRole } = props;
 
-  const { signout } = props;
+  const loggedIn = Cookies.get(cookieLogin) != null;
+  const [admin, setAdmin] = useState(false);
+
+  useEffect(() => {
+    getRole()
+    setAdmin(role === adminRole)
+  }, [setAdmin, role, getRole])
 
   const overlayBundle = (
-    // TODO : logout
-    // TODO : change password
-    // TODO : if admin, control panel (edit user role)
     <Popover id={`popover-bundle`}>
       <Popover.Content>
         <Button
@@ -89,13 +92,16 @@ const NavBar = (props) => {
   )
 }
 
+const mapStateToProps = (state) => ({
+  role: state.user.role,
+});
+
 const mapDispatchToProps = (dispatch) => ({
-  signout: () => dispatch(
-    signout(),
-  ),
+  signout: () => dispatch(signout()),
+  getRole: () => dispatch(getRole()),
 });
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps,
 )(NavBar);

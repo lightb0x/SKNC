@@ -33,3 +33,5 @@ export const GET_ROLE = 'GET_ROLE';
 
 export const SEARCH_USER = 'SEARCH_USER';
 export const CHANGE_ROLE = 'CHANGE_ROLE';
+
+export const DEFAULT = 'DEFAULT';

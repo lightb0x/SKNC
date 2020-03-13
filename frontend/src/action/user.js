@@ -1,5 +1,5 @@
 import axios from 'axios';
-import Cookie from 'js-cookie';
+import Cookies from 'js-cookie';
 
 import {
   SIGN_UP,
@@ -11,37 +11,38 @@ import {
   GET_ROLE,
   SEARCH_USER,
   CHANGE_ROLE,
+  DEFAULT,
 } from './types';
 
-import { v1port, cookieLogin } from '../settings';
+import { v1port, cookieLogin, nologinRole } from '../settings';
 
 export const signup = () => (dispatch) => {
 
 }
 
 export const signin = (username, password) => (dispatch) => {
-  axios.post(v1port + "/signin", { username, password }).then(() => {
-    axios.get(v1port + "/account/role").then((res) => { console.log(res) })
+  axios.post(v1port + "/signin", { username, password }).then((res) => {
     dispatch({
       type: SIGN_IN,
       signinFailed: false,
+      role: res.data.role,
     });
   }).catch(() => {
     dispatch({
       type: SIGN_IN,
       signinFailed: true,
+      role: nologinRole,
     })
   })
 };
 
 export const signout = () => (dispatch) => {
-  axios.get(v1port + "/signout").then((res) => {
-    Cookie.remove(cookieLogin)
-    console.log(res)
-    console.log('signout succeeded')
-  }).catch((err) => {
-    console.log(err)
-    console.log('signout failed')
+  axios.get(v1port + "/signout").then(() => {
+    Cookies.remove(cookieLogin);
+    dispatch({ type: SIGN_OUT })
+  }).catch(() => {
+    Cookies.remove(cookieLogin);
+    dispatch({ type: SIGN_OUT })
   })
 };
 
@@ -58,26 +59,18 @@ export const resetPassword = () => (dispatch) => {
 }
 
 export const getRole = () => (dispatch, getState) => {
-  axios.get(v1port + "/account/role").then((res) => { console.log(res) })
-  const notLoggedIn = 'nologin';
-  const currentRole = getState().user.role;
-  if (currentRole === notLoggedIn && Cookie.get(cookieLogin) == null) {
-    dispatch({
-      type: GET_ROLE,
-      role: notLoggedIn,
-    })
-  } else {
+  const currentRole = getState().user.role
+  const token = Cookies.get(cookieLogin)
+  if (currentRole === nologinRole && token != null) {
     axios.get(v1port + "/account/role").then((res) => {
-      dispatch({
-        type: GET_ROLE,
-        role: res,
-      })
+      dispatch({ type: GET_ROLE, role: res.data })
     }).catch(() => {
-      dispatch({
-        type: GET_ROLE,
-        role: notLoggedIn,
-      })
+      dispatch({ type: GET_ROLE, role: nologinRole })
     })
+  } else if (token == null) {
+    dispatch({ type: GET_ROLE, role: nologinRole })
+  } else {
+    dispatch({ type: DEFAULT })
   }
 }
 

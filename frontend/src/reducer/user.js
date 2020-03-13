@@ -10,22 +10,21 @@ import {
   CHANGE_ROLE,
 } from '../action/types';
 
-const notLoggedIn = 'nologin';
+import { nologinRole } from '../settings';
+
 const initialState = {
   signinFailed: false,
   searchResult: {},
-  role: notLoggedIn,
+  role: nologinRole,
 };
 
 export default function (state = initialState, action) {
   switch (action.type) {
     case SIGN_UP:
-    case SIGN_IN: {
-      return { ...state, signinFailed: action.signinFailed };
-    }
-    case SIGN_OUT: {
-      return { ...state, role: notLoggedIn }
-    }
+    case SIGN_IN:
+      return { ...state, signinFailed: action.signinFailed, role: action.role };
+    case SIGN_OUT:
+      return { ...state, role: nologinRole }
     case CHANGE_PASSWORD:
     case DELETE_USER:
     case RESET_PASSWORD:

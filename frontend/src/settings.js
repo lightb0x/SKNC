@@ -16,8 +16,8 @@ export const searchType = ['제목', '저자'];
 export const numArticlesOnHeader = 5;
 export const numArticlesPerRequest = 5;
 
-// TODO : make '' before deploy
-export const backend = 'http://localhost:8080';
+
+export const backend = '';
 export const v1port = backend + '/api/v1';
 
 export const cookieLogin = 'sessionid';
@@ -26,3 +26,4 @@ export const adminRole = 'admin';
 export const staffRole = 'staff';
 export const userRole = 'user';
 export const tempRole = 'temp';
+export const nologinRole = 'nologin';

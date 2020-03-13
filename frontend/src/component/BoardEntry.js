@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { connect } from 'react-redux';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -18,8 +19,8 @@ import PropTypes from 'prop-types';
 
 import { boards, searchType } from '../settings';
 
-export default function BoardEntry(props) {
-  const { articles, boardName } = props;
+function BoardEntry(props) {
+  const { boardName } = props;
   // const boardName = props.match.path.slice(1);
   const board = boards[boardName];
   let description, search, load, header;
@@ -101,7 +102,19 @@ export default function BoardEntry(props) {
   );
 }
 
+const mapStateToProps = (state) => ({
+
+});
+
+const mapDispatchToProps = (dispatch) => ({
+
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(BoardEntry);
+
 BoardEntry.propTypes = {
-  articles: PropTypes.array.isRequired,
   boardName: PropTypes.string.isRequired,
 };

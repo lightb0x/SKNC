@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
+import Cookies from 'js-cookie';
 import { useKeyPressEvent } from 'react-use';
 import { useHistory } from 'react-router-dom';
 
@@ -8,16 +9,15 @@ import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 
-import { signin } from '../action/user';
+import { signin, getRole } from '../action/user';
 
 import PropTypes from 'prop-types';
 
+import { cookieLogin } from '../settings';
 import '../center.css';
 
-// TODO : login feature (redux)
 function Signin(props) {
-  // TODO : redirect to /home if already logged in
-  const { signin, failed } = props;
+  const { signin, failed, role } = props;
   const history = useHistory();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -37,9 +37,15 @@ function Signin(props) {
     setPassword('');
   };
 
+  // redirect to `/` if already logged in
+  useEffect(() => {
+    if (Cookies.get(cookieLogin) != null) {
+      history.push('/')
+    }
+  }, [role, history])
+
   return (
     <div className="signin">
-      {/* TODO : if cookie is not used, delete following lines */}
       <Alert variant='warning' style={{ textAlign: "center" }}>
         <p style={{
           marginBottom: 0,
@@ -116,12 +122,12 @@ function Signin(props) {
 
 const mapStateToProps = (state) => ({
   failed: state.user.signinFailed,
+  role: state.user.role,
 })
 
 const mapDispatchToProps = (dispatch) => ({
-  signin: (username, password) => dispatch(
-    signin(username, password),
-  ),
+  signin: (username, password) => dispatch(signin(username, password)),
+  getRole: () => dispatch(getRole()),
 });
 
 export default connect(
@@ -132,4 +138,5 @@ export default connect(
 Signin.propTypes = {
   failed: PropTypes.bool.isRequired,
   signin: PropTypes.func.isRequired,
+  getRole: PropTypes.func.isRequired,
 };

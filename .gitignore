@@ -1,6 +1,9 @@
 # frontend node_modules files
 
+frontend/build
 frontend/node_modules
+frontend/package-lock.json
+frontend/yarn.lock
 backend/secret.go
 .DS_Store
 
