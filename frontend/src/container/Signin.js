@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { connect } from 'react-redux';
 import { useKeyPressEvent } from 'react-use';
 import { useHistory } from 'react-router-dom';
@@ -16,6 +16,8 @@ import '../center.css';
 
 // TODO : login feature (redux)
 function Signin(props) {
+  // TODO : redirect to /home if already logged in
+  const { signin, failed } = props;
   const history = useHistory();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -30,7 +32,7 @@ function Signin(props) {
       return;
     }
 
-    props.signin(username, password)
+    signin(username, password)
     setUsername('');
     setPassword('');
   };
@@ -74,9 +76,19 @@ function Signin(props) {
             />
             <p style={{
               fontSize: 'small',
+              textAlign: 'left',
             }}><a href='/reset'><u>비밀번호를 잊어버렸나요?</u></a></p>
             <br />
-            <br />
+            {
+              failed
+                ? <p style={{
+                  fontSize: 'small',
+                  color: 'red',
+                  marginBottom: '5px',
+                  textAlign: 'right',
+                }}>로그인에 실패하였습니다</p>
+                : <br />
+            }
             {/* type="submit" ? */}
             <Button
               variant="outline-secondary"
@@ -102,6 +114,10 @@ function Signin(props) {
   )
 };
 
+const mapStateToProps = (state) => ({
+  failed: state.user.signinFailed,
+})
+
 const mapDispatchToProps = (dispatch) => ({
   signin: (username, password) => dispatch(
     signin(username, password),
@@ -109,10 +125,11 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 export default connect(
-  null,
+  mapStateToProps,
   mapDispatchToProps,
 )(Signin);
 
 Signin.propTypes = {
+  failed: PropTypes.bool.isRequired,
   signin: PropTypes.func.isRequired,
 };

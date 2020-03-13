@@ -97,8 +97,8 @@ func main() {
 	db.Create(&test)
 	var test2 = User{
 		Username: "sys2",
-		// SHA512 encoded "helloworld"
-		Password: "1594244d52f2d8c12b142bb61f47bc2eaf503d6d9ca8480cae9fcf112f66e4967dc5e8fa98285e36db8af1b8ffa8b84cb15e0fbcf836c3deb803c13f37659a60",
+		// SHA512 encoded "helloworld1"
+		Password: "76cfde0f132223ee1a9a21ff52e99e0671e269ce82b3bb5283be4ac3dbf3a67e58ce9f4631d12172f622c264935b4c0b475f19a1686b54a5c7efc85176575ec6",
 		Role:     "admin",
 		Email:    "lightb0x@naver.com2",
 		Token:    "",

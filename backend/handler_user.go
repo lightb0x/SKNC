@@ -403,6 +403,13 @@ func signup(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Successfully signed up"})
 }
 
+func getRole(c *gin.Context) {
+	s := sessions.Default(c)
+	role := s.Get(rolekey)
+
+	c.String(http.StatusOK, role.(string))
+}
+
 func changeRole(c *gin.Context) {
 	// get json data
 	var data userRole

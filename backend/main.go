@@ -4,7 +4,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
-	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -30,15 +29,12 @@ func main() {
 	// gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()
-	// r.Static("/", "/Users/lightb0x/Documents/workspace/sknc/frontend/build")
-	r.Use(static.Serve("/", static.LocalFile("../frontend/build", true)))
-	// r.Use(static.Serve("/main", static.LocalFile("../frontend/build", true)))
 
 	// TODO : DELETE FOLLOWING LINE WHEN DEPLOYING
 	r.Use(cors.Default()) // CORS allow-all : ONLY FOR DEV MODE
 
 	store := cookie.NewStore([]byte("secret"))
-	r.Use(sessions.Sessions("login", store))
+	r.Use(sessions.Sessions("sessionid", store))
 	// r.Use(csrf.Middleware(csrf.Options{
 	// 	// Secret: "secret123", // TODO : go for real secret key
 	// 	ErrorFunc: func(c *gin.Context) {
@@ -96,11 +92,16 @@ func main() {
 			accountGroup.POST("/resetRequest", resetSendEmail)
 			accountGroup.GET("/resetAccept", resetAccept)
 		}
-		accountAuthGroup := v1.Group("/account")
-		accountAuthGroup.Use(AuthRequired(user))
+		accountTempGroup := v1.Group("/account")
+		accountTempGroup.Use(AuthRequired(temp))
 		{
-			accountAuthGroup.POST("/password", changePassword)
-			accountAuthGroup.POST("/delete", deleteSelfAccount)
+			accountTempGroup.POST("/password", changePassword)
+			accountTempGroup.GET("/role", getRole)
+		}
+		accountUserGroup := v1.Group("/account")
+		accountUserGroup.Use(AuthRequired(user))
+		{
+			accountUserGroup.POST("/delete", deleteSelfAccount)
 		}
 		accountAdminGroup := v1.Group("/account")
 		accountAdminGroup.Use(AuthRequired(admin))

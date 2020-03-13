@@ -34,6 +34,7 @@ const NavBar = (props) => {
           variant='light'
           onClick={() => {
             signout();
+            window.location.reload(false);
           }}>sign out</Button>
         <br />
         <Button variant='light' href='/account'>account</Button>

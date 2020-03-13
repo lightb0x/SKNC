@@ -39,6 +39,12 @@ func AuthRequired(level string) gin.HandlerFunc {
 			} else {
 				c.Next()
 			}
+		case temp:
+			if level == admin || level == staff || level == user {
+				abortWithError(c)
+			} else {
+				c.Next()
+			}
 		default:
 			abortWithError(c)
 		}

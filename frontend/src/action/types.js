@@ -29,6 +29,7 @@ export const SIGN_OUT = 'SIGN_OUT';
 export const CHANGE_PASSWORD = 'CHANGE_PASSWORD';
 export const DELETE_USER = 'DELETE_USER';
 export const RESET_PASSWORD = 'RESET_PASSWORD';
+export const GET_ROLE = 'GET_ROLE';
 
 export const SEARCH_USER = 'SEARCH_USER';
 export const CHANGE_ROLE = 'CHANGE_ROLE';
