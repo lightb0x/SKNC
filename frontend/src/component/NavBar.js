@@ -16,6 +16,8 @@ import { faUser } from '@fortawesome/free-solid-svg-icons';
 
 import { title, boards, cookieLogin, adminRole } from '../settings';
 
+import './NavBar.css';
+
 
 const NavBar = (props) => {
   // TODO : this is not working; maybe because this is component?
@@ -55,12 +57,15 @@ const NavBar = (props) => {
   // TODO
 
   return (
-    <Navbar bg="light" variant="light">
-      <Navbar.Brand href="/home"><b>{title}</b></Navbar.Brand>
+    <Navbar bg="light" variant="light" className='no-padding-xs'>
+      <Navbar.Brand href="/home" className='margin-right-auto-xs'>
+        <b>{title}</b>
+      </Navbar.Brand>
       <Nav className="mr-auto">
         {
           Object.keys(boards).map((item) => (
             <Nav.Link
+              className="margin-auto-xs"
               key={item}
               href={item}
             >{boards[item][0]}</Nav.Link>
@@ -76,12 +81,16 @@ const NavBar = (props) => {
             placement="bottom"
             overlay={overlayBundle}
           >
-            <Button variant="outline-secondary">
+            <Button
+              className="margin-auto-xs"
+              variant="outline-secondary"
+            >
               <FontAwesomeIcon icon={faUser} />
             </Button>
           </OverlayTrigger>
           :
           <Button
+            className="margin-auto-xs"
             variant="outline-secondary"
             href="/signin"
           >

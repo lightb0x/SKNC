@@ -1,14 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+import { connect } from 'react-redux';
 import axios from 'axios';
 
-import { v1port } from '../settings';
+import Writer from '../component/Writer';
+import { getRole } from '../action/user';
 
-export default function Draft() {
-  const [docx, setDocx] = useState(null)
-  const [isUploaded, setIsUploaded] = useState(false)
-  const [id, setId] = useState("")
+import { v1port, adminRole, staffRole } from '../settings';
+
+function Draft(props) {
+  const history = useHistory();
+  const { role, getRole } = props;
+
+  const [docx, setDocx] = useState(null);
+  const [isUploaded, setIsUploaded] = useState(false);
+  const [staff, setStaff] = useState(false);
+  const [id, setId] = useState("");
 
   // TODO : redux on draft HTML and images, using `id`
+  useEffect(() => {
+    getRole();
+    setStaff(role === adminRole || role === staffRole);
+  }, [setStaff, role, getRole])
+
+  useEffect(() => {
+    if (isUploaded) {
+      history.push('/write')
+    }
+  }, [isUploaded, history])
+
+  // if not staff or admin, redirect to `/`
+  if (!staff) {
+    history.push('/');
+  }
 
   function setFile(e) {
     setDocx(e.target.files[0])
@@ -29,9 +53,6 @@ export default function Draft() {
 
   return (
     <div>
-      {/* TODO : requires authentication! */}
-      {/*        if not, redirect to /admin */}
-      {/*        how to check if user is logged in or not? */}
       {
         !isUploaded
           ? <div>
@@ -42,8 +63,21 @@ export default function Draft() {
               onChange={setFile.bind(this)} />
             <input type="button" onClick={postFile} value="Upload" />
           </div>
-          : <br />
+          : <Writer complex id={id} />
       }
     </div>
   )
 }
+
+const mapStateToProps = (state) => ({
+  role: state.user.role,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  getRole: () => dispatch(getRole()),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Draft);

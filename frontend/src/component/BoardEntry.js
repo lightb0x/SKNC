@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
 import { connect } from 'react-redux';
+
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -10,18 +12,29 @@ import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
+import { getRole } from '../action/user';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faEdit } from '@fortawesome/free-solid-svg-icons';
 
 import ArticleEntry from './ArticleEntry';
 
 import PropTypes from 'prop-types';
 
-import { boards, searchType } from '../settings';
+import {
+  boards,
+  searchType,
+  adminRole,
+  staffRole,
+  userRole,
+  allUser,
+  staffOnly,
+} from '../settings';
 
 function BoardEntry(props) {
-  const { boardName } = props;
-  // const boardName = props.match.path.slice(1);
+  const history = useHistory();
+  const { boardName, role, getRole } = props;
+
   const board = boards[boardName];
   let description, search, load, header;
   if (board === undefined) {
@@ -38,6 +51,14 @@ function BoardEntry(props) {
 
   const [searchT, setSearchT] = useState(searchType[0]);
   const [searchBy, setSearchBy] = useState('');
+  const [staff, setStaff] = useState(false);
+  const [user, setUser] = useState(false);
+  useEffect(() => {
+    getRole();
+    const isStaff = (role === adminRole || role === staffRole);
+    setStaff(isStaff);
+    setUser(role === userRole || isStaff);
+  }, [setStaff, setUser, role, getRole])
 
   const dropdownItemFactory = (name) => {
     return (
@@ -49,10 +70,33 @@ function BoardEntry(props) {
 
   return (
     <div>
-      <h3>
-        {header}
-        {description ? <br /> : ''}<b>{description}</b>
-      </h3>
+      <Container><Row>
+        <Col>
+          <h3>
+            {header}
+            {description ? <br /> : ''}<b>{description}</b>
+          </h3>
+        </Col>
+        <Col xs="auto">
+          {
+            staff && staffOnly.includes(boardName)
+              ? (
+                // TODO : hand over board information
+                <Button onClick={() => history.push('/draft')}>
+                  <FontAwesomeIcon icon={faEdit} />
+                </Button>
+              ) : ''
+          }
+          {
+            user && allUser.includes(boardName)
+              ? (
+                <Button onClick={() => history.push('/write')}>
+                  <FontAwesomeIcon icon={faEdit} />
+                </Button>
+              ) : ''
+          }
+        </Col>
+      </Row></Container>
       {
         search
           ? (
@@ -98,16 +142,16 @@ function BoardEntry(props) {
           )
         })
       } */}
-    </div>
+    </div >
   );
 }
 
 const mapStateToProps = (state) => ({
-
+  role: state.user.role,
 });
 
 const mapDispatchToProps = (dispatch) => ({
-
+  getRole: () => dispatch(getRole()),
 });
 
 export default connect(

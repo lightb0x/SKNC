@@ -1,0 +1,14 @@
+@media (max-width: 576px) {
+  .no-padding-xs {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .margin-right-auto-xs {
+    margin-right: auto;
+  }
+
+  .margin-auto-xs {
+    margin: auto;
+  }
+}

@@ -17,6 +17,7 @@ import Admin from './container/Admin';
 import ResetPass from './container/ResetPass';
 import Draft from './container/Draft';
 import NotFound from './container/NotFound';
+import Write from './container/Write';
 
 import NavBar from './component/NavBar';
 import { boards, numArticlesOnHeader } from './settings';
@@ -61,8 +62,8 @@ function App() {
                 <Route path="/admin" exact component={Admin} />
                 <Route path="/reset" exact component={ResetPass} />
 
-                {/* TODO : requires authentication ! */}
                 <Route path="/draft" exact component={Draft} />
+                <Route path="/write" exact component={Write} />
                 <Route component={NotFound} />
               </Switch>
             </BrowserRouter>

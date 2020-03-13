@@ -95,7 +95,6 @@ function Signin(props) {
                 }}>로그인에 실패하였습니다</p>
                 : <br />
             }
-            {/* type="submit" ? */}
             <Button
               variant="outline-secondary"
               onClick={() => { history.push('/signup') }}
