@@ -1,7 +1,8 @@
 // draft
-export const UPLOAD_DOCX = 'UPLOAD_DOCX';
 export const FETCH_IMG = 'FETCH_IMG';
+export const UPDATE_IMG = 'UPDATE_IMG';
 export const FETCH_HTML = 'FETCH_HTML';
+export const UPDATE_HTML = 'UPDATE_HTML';
 
 // article
 export const FETCH_ARTICLE_LIST = 'FETCH_ARTICLE_LIST';

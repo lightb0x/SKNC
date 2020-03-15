@@ -46,14 +46,16 @@ func main() {
 	// r.GET("/protected", func(c *gin.Context) {
 	// 	c.String(200, csrf.GetToken(c))
 	// })
+	draftHandy := r.Group("/archive")
+	draftHandy.Use(AuthRequired(staff))
+	draftHandy.Static("/", "./archive")
 	v1 := r.Group("/api/v1")
 	{
 		draft := v1.Group("/draft")
-		// TODO : commented out following line for test
-		//        uncomment before deploying
-		// draft.Use(AuthRequired(staff))
+		draft.Use(AuthRequired(staff))
 		{
 			draft.POST("", postDocx)
+			draft.PUT("", checkDraftID)
 
 			draft.GET("/img", getImgs)
 			draft.GET("/html", getHTML)

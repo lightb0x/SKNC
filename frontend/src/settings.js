@@ -29,4 +29,8 @@ export const adminRole = 'admin';
 export const staffRole = 'staff';
 export const userRole = 'user';
 export const tempRole = 'temp';
+
+// no-login value for role
 export const nologinRole = 'nologin';
+// default value for role
+export const defaultRole = 'default';

@@ -1,18 +1,33 @@
 import {
-  UPLOAD_DOCX,
   FETCH_IMG,
+  UPDATE_IMG,
   FETCH_HTML,
+  UPDATE_HTML,
+  POST_ARTICLE,
 } from '../action/types';
 
 const initialState = {
-
+  images: {},
+  html: '',
+  invalidExt: '',
+  articleID: '',
 };
 
 export default function (state = initialState, action) {
   switch (action.type) {
-    case UPLOAD_DOCX:
     case FETCH_IMG:
+      return { ...state, images: action.data, invalidExt: action.invalid };
+    case UPDATE_IMG: {
+      let origState = state;
+      origState.images[action.filename] = action.encoded;
+      return origState;
+    }
     case FETCH_HTML:
+      return { ...state, html: action.data };
+    case UPDATE_HTML:
+      return { ...state, html: action.data };
+    case POST_ARTICLE:
+      return { ...state, articleID: action.data };
     default:
       return state;
   }

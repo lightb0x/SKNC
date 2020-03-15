@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { connect } from 'react-redux';
+import { useKeyPressEvent } from 'react-use';
 
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
@@ -13,6 +14,7 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 
 import { getRole } from '../action/user';
+import { fetchArticleList } from '../action/article';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faEdit } from '@fortawesome/free-solid-svg-icons';
@@ -36,16 +38,14 @@ function BoardEntry(props) {
   const { boardName, role, getRole } = props;
 
   const board = boards[boardName];
-  let description, search, load, header;
+  let description, search, header;
   if (board === undefined) {
     description = null;
     search = false;
-    load = false;
     header = boardName
   } else {
     description = board[1];
     search = true;
-    load = true;
     header = boards[boardName][0]
   }
 
@@ -60,6 +60,16 @@ function BoardEntry(props) {
     setUser(role === userRole || isStaff);
   }, [setStaff, setUser, role, getRole])
 
+
+  const handleSearch = () => {
+    if (searchBy) {
+      // TODO : go search
+    } else {
+      // TODO : dismiss
+    }
+  };
+  useKeyPressEvent('Enter', handleSearch);
+
   const dropdownItemFactory = (name) => {
     return (
       <Dropdown.Item key={name} onSelect={() => setSearchT(name)}>
@@ -67,7 +77,6 @@ function BoardEntry(props) {
       </Dropdown.Item>
     )
   };
-
   return (
     <div>
       <Container><Row>
@@ -81,8 +90,9 @@ function BoardEntry(props) {
           {
             staff && staffOnly.includes(boardName)
               ? (
-                // TODO : hand over board information
-                <Button onClick={() => history.push('/draft')}>
+                <Button onClick={() => history.push('/draft')} style={{
+                  paddingRight: "8px",
+                }}>
                   <FontAwesomeIcon icon={faEdit} />
                 </Button>
               ) : ''
@@ -90,7 +100,9 @@ function BoardEntry(props) {
           {
             user && allUser.includes(boardName)
               ? (
-                <Button onClick={() => history.push('/write')}>
+                <Button onClick={() => history.push('/write')} sylte={{
+                  paddingRight: "8px",
+                }}>
                   <FontAwesomeIcon icon={faEdit} />
                 </Button>
               ) : ''
@@ -102,7 +114,7 @@ function BoardEntry(props) {
           ? (
             <Container><Row>
               <Col></Col>
-              <Col xs={12} sm={10} md={10} lg={10} xl={10}>
+              <Col xs={12} md={10}>
                 <InputGroup>
                   <b><DropdownButton
                     variant="light"
@@ -122,7 +134,9 @@ function BoardEntry(props) {
                     }}
                   />
                   <InputGroup.Append>
-                    <Button disabled={!searchBy} variant="danger">
+                    {/* TODO : search on enter */}
+                    <Button disabled={!searchBy} variant="danger"
+                      onClick={() => { handleSearch(); }}>
                       <FontAwesomeIcon icon={faSearch} />
                     </Button>
                   </InputGroup.Append>
@@ -148,10 +162,12 @@ function BoardEntry(props) {
 
 const mapStateToProps = (state) => ({
   role: state.user.role,
+  articles: state.article.articleList,
 });
 
 const mapDispatchToProps = (dispatch) => ({
   getRole: () => dispatch(getRole()),
+  getArticles: (option) => dispatch(fetchArticleList(option)),
 });
 
 export default connect(
@@ -161,4 +177,8 @@ export default connect(
 
 BoardEntry.propTypes = {
   boardName: PropTypes.string.isRequired,
+  role: PropTypes.string.isRequired,
+  getRole: PropTypes.func.isRequired,
+  articles: PropTypes.array.isRequired,
+  getArticles: PropTypes.func.isRequired,
 };

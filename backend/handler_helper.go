@@ -62,7 +62,7 @@ func checkTokenToReturn(c *gin.Context, token string) bool {
 }
 
 func isValidToken(s string) bool {
-	r, err := regexp.Compile("[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}")
+	r, err := regexp.Compile("^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$")
 
 	if err != nil {
 		return false
@@ -108,7 +108,7 @@ func trimKeywordToReturn(c *gin.Context, keyword string) string {
 }
 
 func isValidKeyword(s string) bool {
-	r, err := regexp.Compile("^[a-zA-Z0-9\uac00-\ud7a3,.!% ]*$")
+	r, err := regexp.Compile("^[a-zA-Z0-9\uac00-\ud7a3 ]*$")
 	if err != nil {
 		return false
 	}
@@ -134,9 +134,19 @@ func isValidFilename(s string) bool {
 func checkRoleToReturn(c *gin.Context, role string) bool {
 	switch role {
 	case admin, staff, user, temp:
-		return true
+		return false
 	default:
 		c.Status(http.StatusBadRequest)
+		return true
+	}
+}
+
+func checkExtToReturn(c *gin.Context, ext string) bool {
+	switch ext {
+	case "png", "jpeg", "jpg":
 		return false
+	default:
+		c.Status(http.StatusBadRequest)
+		return true
 	}
 }

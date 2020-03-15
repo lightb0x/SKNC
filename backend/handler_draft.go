@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -11,6 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+type draftIDForm struct {
+	DraftID string `json:"draftID" binding:"required"`
+}
 
 // helper function for postDocx
 func streamToByte(stream io.Reader) []byte {
@@ -55,24 +60,13 @@ func postDocx(c *gin.Context) {
 		return
 	}
 
-	if err := os.Chdir(newPath); err != nil {
-		c.JSON(http.StatusInternalServerError,
-			gin.H{"error": err.Error()})
-		return
-	}
-
 	// use pandoc to get HTML and img files
 	cmd := exec.Command("pandoc",
-		"--webtex='https://latex.codecogs.com/svg.latex?'",
-		"--extract-media=.",
-		"-o", "./draft.html", "./"+filename)
+		"--webtex=https://latex.codecogs.com/svg.latex?",
+		"--extract-media="+newPath,
+		"-o", newPath+"/draft.html", newPath+"/"+filename)
 	if err := cmd.Run(); err != nil {
-		c.JSON(http.StatusInternalServerError,
-			gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := os.Chdir("../../"); err != nil {
+		fmt.Println(err.Error())
 		c.JSON(http.StatusInternalServerError,
 			gin.H{"error": err.Error()})
 		return
@@ -162,5 +156,31 @@ func getHTML(c *gin.Context) {
 		return
 	}
 
+	// c.Data
 	c.JSON(http.StatusOK, gin.H{"data": html})
+}
+
+func checkDraftID(c *gin.Context) {
+	// get json data
+	var data draftIDForm
+	if err := c.ShouldBindJSON(&data); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	draftID := data.DraftID
+	if checkTokenToReturn(c, draftID) {
+		return
+	}
+
+	newPath := "./archive/" + draftID
+	if err := os.Chdir(newPath); err != nil {
+		c.Status(http.StatusNotFound)
+		return
+	}
+	if err := os.Chdir("../../"); err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	c.Status(http.StatusOK)
 }

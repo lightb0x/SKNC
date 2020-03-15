@@ -20,8 +20,6 @@ import './NavBar.css';
 
 
 const NavBar = (props) => {
-  // TODO : this is not working; maybe because this is component?
-  // TODO : useLocation() to get current url ?
   const { signout, role, getRole } = props;
 
   const loggedIn = Cookies.get(cookieLogin) != null;
@@ -29,8 +27,10 @@ const NavBar = (props) => {
 
   useEffect(() => {
     getRole()
+  }, [getRole])
+  useEffect(() => {
     setAdmin(role === adminRole)
-  }, [setAdmin, role, getRole])
+  }, [role, setAdmin])
 
   const overlayBundle = (
     <Popover id={`popover-bundle`}>
@@ -39,7 +39,6 @@ const NavBar = (props) => {
           variant='light'
           onClick={() => {
             signout();
-            window.location.reload(false);
           }}>sign out</Button>
         <br />
         <Button variant='light' href='/account'>account</Button>
@@ -53,8 +52,6 @@ const NavBar = (props) => {
       </Popover.Content>
     </Popover>
   )
-
-  // TODO
 
   return (
     <Navbar bg="light" variant="light" className='no-padding-xs'>

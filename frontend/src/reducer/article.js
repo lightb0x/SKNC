@@ -17,16 +17,18 @@ const initialState = {
     // "createdAt": article.CreatedAt,
     // "updatedAt": article.UpdatedAt,
     // "isUpdated": article.UpdatedAt.After(article.CreatedAt),
-    'boardname': '',
-    'writer': '',
-    'title': '',
-    'content': '',
-    'count': 0,
-    'createdAt': Date(),
-    'updatedAt': Date(),
-    "isUpdated": false
+    boardname: '',
+    writer: '',
+    title: '',
+    content: '',
+    count: 0,
+    createdAt: Date(),
+    updatedAt: Date(),
+    isUpdated: false
+    // comments: [], // TODO : comment redux or here ?
   },
   articleList: [],
+  lastTime: null,
 };
 
 export default function (state = initialState, action) {

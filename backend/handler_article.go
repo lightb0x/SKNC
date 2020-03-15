@@ -17,7 +17,7 @@ import (
 
 type articleListOption struct {
 	Boardname     string    `json:"boardname" binding:"required"`
-	SearchType    string    `json:"searchType" binding:"required"`
+	SearchType    string    `json:"searchType"`
 	SearchKeyword string    `json:"searchKeyword"`
 	NumArticles   int       `json:"numArticles" binding:"required"`
 	LastTime      time.Time `json:"lastTime"`
@@ -29,6 +29,7 @@ type articleForm struct {
 	Content   string            `json:"content" binding:"required"`
 	Summary   string            `json:"summary" binding:"required"`
 	Thumbnail []byte            `json:"thumbnail"`
+	ThumbExt  string            `json:"thumbnailExt"`
 	Images    map[string][]byte `json:"images"`
 	DraftID   string            `json:"draftID" binding:"required"`
 }
@@ -38,6 +39,7 @@ type editArticleForm struct {
 	Content   string `json:"content" binding:"required"`
 	Summary   string `json:"summary" binding:"required"`
 	Thumbnail []byte `json:"thumbnail"`
+	ThumbExt  string `json:"thumbnailExt"`
 }
 
 func getArticleList(c *gin.Context) {
@@ -47,52 +49,67 @@ func getArticleList(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	search := true
+	home := false
+
 	// boardname check
 	boardname := data.Boardname
 	switch boardname {
 	case lite, mainArticle, oasis, square:
 	default:
-		c.Status(http.StatusBadRequest)
-		return
+		home = true
 	}
+
 	searchType := data.SearchType
 	switch searchType {
 	case "writer", "title", "content":
 	default:
-		c.Status(http.StatusBadRequest)
-		return
+		search = false
 	}
-	searchKeyword := trimKeywordToReturn(c, data.SearchKeyword)
-	if searchKeyword == "" {
-		return
+
+	searchKeyword := data.SearchKeyword
+	if utf8.RuneCountInString(strings.Trim(searchKeyword, " ")) < 2 {
+		search = false
+	} else {
+		searchKeyword = trimKeywordToReturn(c, searchKeyword)
+		if searchKeyword == "" {
+			return
+		}
 	}
+
 	numArticles := data.NumArticles
 	if numArticles < 2 || numArticles > 30 {
 		c.Status(http.StatusBadRequest)
 		return
 	}
-	lastTime := data.LastTime
 
+	lastTime := data.LastTime
 	if lastTime.IsZero() {
 		lastTime = time.Now()
 	}
 
 	var articles []Article
-	const selectQuery = "created_at, updated_at, title, summary, thumbnail, count"
+	const selectQuery = "created_at, updated_at, title, summary, thumbnail, thumb_ext, count"
 	var query *gorm.DB
-	if utf8.RuneCountInString(searchKeyword) < 2 {
-		// no search
+	if home {
 		query = db.Model(&Article{}).
-			Where("boardname = ? AND created_at < ?", boardname, lastTime).
-			Order("created_at desc").Select(selectQuery).
-			Limit(numArticles).Find(&articles)
-	} else {
+			Where("boardname = ? OR boardname = ? OR boardname = ?",
+				lite, mainArticle, oasis).
+			Order("created_at desc").Select(selectQuery).Limit(numArticles).
+			Find(&articles)
+	} else if search {
 		// search
 		query = db.Model(&Article{}).
 			Where("boardname = ? AND "+searchType+" LIKE ? AND created_at < ?",
 				boardname, "%"+searchKeyword+"%", lastTime).
 			Order("created_at desc").Select(selectQuery).Limit(numArticles).
 			Find(&articles)
+	} else {
+		// no search
+		query = db.Model(&Article{}).
+			Where("boardname = ? AND created_at < ?", boardname, lastTime).
+			Order("created_at desc").Select(selectQuery).
+			Limit(numArticles).Find(&articles)
 	}
 	if query.Error != nil {
 		c.Status(http.StatusNotFound)
@@ -114,6 +131,7 @@ func getArticleList(c *gin.Context) {
 			"title":     article.Title,
 			"summary":   article.Summary,
 			"thumbnail": article.Thumbnail,
+			"thumbExt":  article.ThumbExt,
 			"count":     article.Count,
 			"createdAt": article.CreatedAt,
 			"isUpdated": article.UpdatedAt.After(article.CreatedAt),
@@ -130,18 +148,13 @@ func getArticleList(c *gin.Context) {
 
 // heper function for postArticle
 func extToMIME(s string) string {
-	prefix := "image/"
+	prefix := "data:image/"
+	suffix := ";base64,"
 	switch s {
-	case "gif", "webp":
-		return prefix + s
-	case "ico":
-		return prefix + "x-icon"
+	case "png":
+		return prefix + s + suffix
 	case "jpeg", "jpg":
-		return prefix + "jpeg"
-	case "svg":
-		return prefix + "svg+xml"
-	case "tif", "tiff":
-		return prefix + "tiff"
+		return prefix + "jpeg" + suffix
 	default:
 		return ""
 	}
@@ -193,6 +206,11 @@ func postArticle(c *gin.Context) {
 		return
 	}
 
+	thumbnailExt := data.ThumbExt
+	if checkExtToReturn(c, thumbnailExt) {
+		return
+	}
+
 	// boardname check
 	boardname := data.Boardname
 	switch boardname {
@@ -218,10 +236,10 @@ func postArticle(c *gin.Context) {
 		return
 	}
 
-	// filename check
+	// ext check
 	images := data.Images
 	for key := range images {
-		if checkFilenameToReturn(c, key) {
+		if checkExtToReturn(c, key) {
 			return
 		}
 	}
@@ -242,11 +260,10 @@ func postArticle(c *gin.Context) {
 
 	for key := range images {
 		// store images on DB
-		ext := key[strings.LastIndex(key, ".")+1:]
-		mime := extToMIME(ext)
+		mime := extToMIME(key)
 		if mime == "" {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"error": "Invalid extension : " + ext})
+				gin.H{"error": "Invalid extension : " + key})
 			return
 		}
 		img := Image{
@@ -258,8 +275,8 @@ func postArticle(c *gin.Context) {
 			return
 		}
 		// and fix html image source
-		// ./archive/:uid/media/image1.jpeg -> /api/v1/article/:id
-		path := "./archive/" + draftID + "/media/" + key
+		// /archive/:uid/media/image1.jpeg -> /api/v1/article/:id
+		path := "/archive/" + draftID + "/media/" + key
 		strings.Replace(content, path,
 			"/api/v1/image/"+string(img.ID),
 			strings.Count(content, path))
@@ -272,6 +289,7 @@ func postArticle(c *gin.Context) {
 		Content:   content,
 		Summary:   summary,
 		Thumbnail: thumbnail,
+		ThumbExt:  thumbnailExt,
 		Count:     0,
 		DraftID:   draftID,
 	}
@@ -356,7 +374,7 @@ func editArticle(c *gin.Context) {
 	}
 
 	// get json data
-	var data articleForm
+	var data editArticleForm
 	if err := c.ShouldBindJSON(&data); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -391,6 +409,11 @@ func editArticle(c *gin.Context) {
 	if len(thumbnail) > 1<<24-1 {
 		c.JSON(http.StatusBadRequest,
 			gin.H{"error": "thumbnail is too big"})
+		return
+	}
+
+	thumbnailExt := data.ThumbExt
+	if checkExtToReturn(c, thumbnailExt) {
 		return
 	}
 
@@ -431,6 +454,7 @@ func editArticle(c *gin.Context) {
 		Content:   content,
 		Summary:   summary,
 		Thumbnail: thumbnail,
+		ThumbExt:  thumbnailExt,
 	})
 	if update.Error != nil {
 		c.Status(http.StatusInternalServerError)
@@ -471,5 +495,10 @@ func fetchImage(c *gin.Context) {
 		c.Status(http.StatusNotFound)
 		return
 	}
-	c.Data(http.StatusOK, image.Ext, image.Content)
+	// i := strings.Index("data:image/jpeg;base64,", ":")
+	// j := strings.Index("data:image/jpeg;base64,", ";")
+	// fmt.Println(st[i+1:j])
+	i := strings.Index(image.Ext, ":")
+	j := strings.Index(image.Ext, ";")
+	c.Data(http.StatusOK, image.Ext[i+1:j], image.Content)
 }

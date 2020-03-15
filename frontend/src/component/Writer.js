@@ -1,9 +1,20 @@
 import React from 'react';
 
-export default function Writer() {
+import ComplexWriter from './ComplexWriter';
+import SimpleWriter from './SimpleWriter';
+
+import PropTypes from 'prop-types';
+
+export default function Writer(props) {
+  const { complex, id } = props;
   return (
-    <div>
-      <p>Writer component</p>
-    </div>
+    complex
+      ? <ComplexWriter id={id} />
+      : <SimpleWriter />
   )
 }
+
+Writer.propTypes = {
+  id: PropTypes.string,
+  complex: PropTypes.bool,
+};

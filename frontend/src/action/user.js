@@ -14,7 +14,7 @@ import {
   DEFAULT,
 } from './types';
 
-import { v1port, cookieLogin, nologinRole } from '../settings';
+import { v1port, cookieLogin, nologinRole, defaultRole } from '../settings';
 
 export const signup = () => (dispatch) => {
 
@@ -59,13 +59,13 @@ export const resetPassword = () => (dispatch) => {
 }
 
 export const getRole = () => (dispatch, getState) => {
-  const currentRole = getState().user.role
-  const token = Cookies.get(cookieLogin)
-  if (currentRole === nologinRole && token != null) {
+  const currentRole = getState().user.role;
+  const token = Cookies.get(cookieLogin);
+  if (currentRole === defaultRole && token != null) {
     axios.get(v1port + "/account/role").then((res) => {
       dispatch({ type: GET_ROLE, role: res.data })
     }).catch(() => {
-      dispatch({ type: GET_ROLE, role: nologinRole })
+      dispatch({ type: GET_ROLE, role: defaultRole })
     })
   } else if (token == null) {
     dispatch({ type: GET_ROLE, role: nologinRole })

@@ -10,12 +10,12 @@ import {
   CHANGE_ROLE,
 } from '../action/types';
 
-import { nologinRole } from '../settings';
+import { nologinRole, defaultRole } from '../settings';
 
 const initialState = {
   signinFailed: false,
   searchResult: {},
-  role: nologinRole,
+  role: defaultRole,
 };
 
 export default function (state = initialState, action) {

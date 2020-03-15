@@ -20,7 +20,7 @@ import NotFound from './container/NotFound';
 import Write from './container/Write';
 
 import NavBar from './component/NavBar';
-import { boards, numArticlesOnHeader } from './settings';
+import { boards } from './settings';
 
 import './App.css';
 
@@ -31,13 +31,13 @@ function App() {
         <NavBar />
         <Container><Row>
           <Col></Col>
-          <Col xs={12} sm={10} md={10} lg={8} xl={6}>
+          <Col xs={12} md={10}>
             <BrowserRouter>
               <Switch>
                 <Redirect exact from="/" to="/home" />
 
                 <Route exact path="/home" render={() =>
-                  <Home numArticles={numArticlesOnHeader} />
+                  <Home />
                 } />
 
                 {
