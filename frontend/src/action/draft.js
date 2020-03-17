@@ -11,55 +11,36 @@ import {
 
 import { v1port } from '../settings';
 
-function extToMIME(ext) {
-  const prefix = 'image/';
-  switch (ext) {
+function extCheck(s) {
+  switch (s) {
     case "png":
-      return prefix + ext;
-    case 'jpg':
-    case 'jpeg':
-      return prefix + 'jpeg';
-    default:
-      return ext;
-  }
-}
-
-function getExt(filename) {
-  const dotIndex = filename.lastIndexOf('.');
-  if (dotIndex < 0) {
-    return;
-  } else {
-    return filename.slice(dotIndex + 1);
-  }
-}
-
-// TODO : header (data:image/jpeg;base64,) should not be included in data
-//        instead, 
-function prefix(filename) {
-  const mime = extToMIME(getExt(filename));
-  if (mime.includes('/')) {
-    return "data:" + extToMIME(getExt(filename)) + ";base64,";
-  } else {
-    return mime;
+    case "jpg":
+    case "jpeg":
+      return true;
+    default: {
+      return s.lastIndexOf('.') < 0
+        ? false
+        : extCheck(s.slice(s.lastIndexOf('.') + 1));
+    }
   }
 }
 
 export const fetchImages = (id) => (dispatch) => {
   axios.get(v1port + '/draft/img?id=' + id).then((res) => {
-    let invalidExt = '';
+    let invalid = [];
+    // `images` is in order, because of the way Object.keys() works
+    // The ordering of the properties is the same as that
+    // given by looping over the properties of the object manually.
     Object.keys(res.data).map(function (item) {
-      const pf = prefix(item);
-      if (pf.includes('/')) {
-        res.data[item] = pf + res.data[item];
-      } else {
-        invalidExt = pf;
+      if (!extCheck(item)) {
+        invalid.push(item);
       }
       return null;
     });
     dispatch({
       type: FETCH_IMG,
       data: res.data,
-      invalid: invalidExt,
+      invalid,
     });
   }).catch(() => {
     dispatch({ type: DEFAULT });
@@ -76,7 +57,7 @@ export const updateImage = (filename, encoded) => (dispatch) => {
 
 export const fetchHTML = (id) => (dispatch) => {
   axios.get(v1port + '/draft/html?id=' + id).then((res) => {
-    // TODO : string replace: `./archive/:id~` -> `/archive/:id`
+    // string replace: `./archive/:id~` -> `/archive/:id`
     const raw = Base64.decode(res.data.data);
     const regex = new RegExp('./archive/' + id, 'g');
     const replace = '/archive/' + id;

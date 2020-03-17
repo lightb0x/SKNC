@@ -44,18 +44,17 @@ const (
 // - up to about 16,777,216 bytes, about 5,592,405 hangul characters
 // Summary(varchar(1200))
 // - cap to 300 characters
-// ThumbExt(varchar(32))
-// - contains MIME datatype (ex: data:image/jpeg;base64,)
+// Thumbnail(mediumblob)
+// - up to about 16,777,215 bytes (16 MiB), base64 encoded
 type Article struct {
 	gorm.Model
 	Boardname string    `gorm:"type:varchar(40)"`
-	Writer    User      `gorm:"foreignkey:ID"`
+	Writer    string    `gorm:"type:varchar(120)"` // TODO : update of def
 	Title     string    `gorm:"type:varchar(480)"`
 	Content   string    `gorm:"type:mediumtext"`
 	Summary   string    `gorm:"type:varchar(1200)"`
-	Thumbnail []byte    `gorm:"type:mediumblob"`
-	ThumbExt  string    `gorm:"type:varchar(32)"`
-	Comments  []Comment `gorm:"foreignkey:ID"`
+	Thumbnail string    `gorm:"type:mediumblob"`
+	Comments  []Comment `gorm:"foreignkey:ArticleRefer"`
 	Count     uint64    `gorm:"type:BIGINT UNSIGNED"`
 	DraftID   string    `gorm:"type:char(36);unique"` // UUID
 }
@@ -67,20 +66,18 @@ const (
 	square      = "square"
 )
 
-// Ext(varchar(32))
-// - contains MIME datatype (ex: data:image/jpeg;base64,)
 // Content(mediumblob)
-// - up to about 16,777,215 bytes (16 MiB)
+// - up to about 16,777,215 bytes (16 MiB), base64 encoded
 type Image struct {
 	gorm.Model
-	Ext     string `gorm:"type:varchar(32)"`
-	Content []byte `gorm:"type:mediumblob"`
+	Content string `gorm:"type:mediumblob"`
 }
 
 // Content(varchar(4000))
 // - cap to 1000 characters (including newline, space, etc)
 type Comment struct {
 	gorm.Model
-	Writer  User   `gorm:"foreignkey:ID"`
-	Content string `gorm:"type:varchar(4000)"`
+	Writer       string `gorm:"type:varchar(120)"` // TODO : update of def
+	Content      string `gorm:"type:varchar(4000)"`
+	ArticleRefer uint   `gorm:"type:INT UNSIGNED"`
 }

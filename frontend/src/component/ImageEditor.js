@@ -18,7 +18,7 @@ import 'react-image-crop/dist/ReactCrop.css';
 function ImageEditor(props) {
   const { filename, images, updateImage } = props;
   const [crop, setCrop] = useState({ unit: '%', width: 100, height: 100 });
-  const [origBase64, _] = useState(images[filename]);
+  const [origBase64, _] = useState(prefix(filename) + images[filename]);
 
   function onCropChange(crop, _percentCrop) {
     setCrop({ ...crop });
@@ -26,6 +26,37 @@ function ImageEditor(props) {
 
   function onCropComplete(crop, _percentCrop) {
     setCrop({ ...crop });
+  }
+
+  function extToMIME(ext) {
+    const prefix = 'image/';
+    switch (ext) {
+      case "png":
+        return prefix + ext;
+      case 'jpg':
+      case 'jpeg':
+        return prefix + 'jpeg';
+      default:
+        return ext;
+    }
+  }
+
+  function getExt(filename) {
+    const dotIndex = filename.lastIndexOf('.');
+    if (dotIndex < 0) {
+      return;
+    } else {
+      return filename.slice(dotIndex + 1);
+    }
+  }
+
+  function prefix(filename) {
+    const mime = extToMIME(getExt(filename));
+    if (mime.includes('/')) {
+      return "data:" + extToMIME(getExt(filename)) + ";base64,";
+    } else {
+      return mime;
+    }
   }
 
   function getCroppedImg(crop) {
@@ -50,21 +81,23 @@ function ImageEditor(props) {
     );
 
     // As Base64 string
-    return canvas.toDataURL(origBase64.slice(0, origBase64.indexOf(',')));
+    return canvas.toDataURL(extToMIME(getExt(filename)));
   }
 
   const encodedOrig = origBase64;
-  const [encodedImage, setEncodedImage] = useState(images[filename]);
+  const [encodedImage, setEncodedImage] = useState(
+    prefix(filename) + images[filename],
+  );
 
   function cutHandler() {
     const cropped = getCroppedImg(crop);
-    // updateImage(filename, cropped.slice(cropped.indexOf(',') + 1));
-    updateImage(filename, cropped);
-    setEncodedImage(images[filename]);
+    updateImage(filename, cropped.slice(cropped.indexOf(',') + 1));
+    // updateImage(filename, cropped);
+    setEncodedImage(prefix(filename) + images[filename]);
   }
 
   function undoHandler() {
-    updateImage(filename, origBase64);
+    updateImage(filename, origBase64.slice(origBase64.indexOf(',') + 1));
     setEncodedImage(origBase64);
   }
   return (

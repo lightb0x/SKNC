@@ -150,3 +150,29 @@ func checkExtToReturn(c *gin.Context, ext string) bool {
 		return true
 	}
 }
+
+func checkImageToReturn(c *gin.Context, image string) bool {
+	if !isValidImage(image) {
+		c.Status(http.StatusBadRequest)
+		return true
+	}
+	return false
+}
+
+func isValidImage(s string) bool {
+	idx := strings.Index(s, ",")
+	if idx < 0 {
+		return false
+	}
+	prefix := "data:image/"
+	suffix := ";base64,"
+	ext := s[0 : idx+1]
+	switch ext {
+	case prefix + "png" + suffix:
+		return true
+	case prefix + "jpeg" + suffix:
+		return true
+	default:
+		return false
+	}
+}

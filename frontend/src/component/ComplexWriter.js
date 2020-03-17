@@ -41,8 +41,8 @@ require('codemirror/mode/xml/xml');
 function ComplexWriter(props) {
   const history = useHistory();
   const {
-    id, getImages, getHTML, images, code, post, edit, editArticle, fetchArticle,
-    invalidExt, articleID,
+    id, getImages, getHTML, images, code, postArticle, edit, editArticle,
+    fetchArticle, invalid, articleID,
   } = props;
   const [boardname, setBoardname] = useState('');
   const [title, setTitle] = useState('');
@@ -51,7 +51,6 @@ function ComplexWriter(props) {
   const [localCode, setLocalCode] = useState('');
 
   const [alertShow, setAlertShow] = useState(true);
-  // const [invalidExt, setInvalidExt] = useState('');
 
   useEffect(() => {
     if (!edit) {
@@ -90,21 +89,16 @@ function ComplexWriter(props) {
     if (edit) {
       editArticle(id, title, summary, thumbnail, localCode);
     } else {
-      post(id, boardname, title, summary, thumbnail, localCode, images);
+      postArticle(id, boardname, title, summary, thumbnail, localCode, images);
     }
   }
 
   function setFile(e) {
     const imageFile = e.target.files[0];
-    const filename = imageFile.name;
     const reader = new FileReader();
     reader.readAsDataURL(imageFile);
     reader.onload = function () {
-      const tmpMap = {};
-      const encoded = reader.result;
-      // tmpMap[filename] = encoded.slice(encoded.indexOf(',') + 1);
-      tmpMap[filename] = encoded;
-      setThumbnail(tmpMap);
+      setThumbnail(reader.result);
     };
   }
 
@@ -112,21 +106,25 @@ function ComplexWriter(props) {
     <div>
       <p>id = {id}</p>
       {
-        invalidExt === ''
+        invalid.length === 0
           ? '' : <Container><Row><Col></Col>
             <Col xs={12} md={10}>
               <Alert variant='danger' style={{ textAlign: 'center' }}>
-                <p><b>{invalidExt}</b> 파일은 지원되지 않습니다.</p>
+                <p><b>{invalid.join(", ")}</b> 파일은 지원되지 않습니다.</p>
                 <p>워드파일의 원본 사진을 바꿔 다시 업로드해주세요.</p>
                 <p>지원 확장자 : <b>jpg, jpeg, png</b></p>
               </Alert>
             </Col>
             <Col></Col></Row></Container>
       }
-      <Alert variant='warning' style={{ textAlign: "center" }}>
-        <p>자른 이미지는 기사 미리보기에 적용되지 않습니다</p>
-        <p><b>하지만 등록하면 제대로 적용됩니다!</b></p>
-      </Alert>
+      {
+        Object.keys(images) === 0
+          ? '' : <Alert variant='warning' style={{ textAlign: "center" }}>
+            {/* TODO : ONLY-SHOW when image is there */}
+            <p>자른 이미지는 기사 미리보기에 적용되지 않습니다</p>
+            <p><b>하지만 등록하면 제대로 적용됩니다!</b></p>
+          </Alert>
+      }
       <InputGroup>
         <b><DropdownButton
           disabled={edit}
@@ -171,7 +169,7 @@ function ComplexWriter(props) {
               <Alert variant="primary" dismissible
                 style={{ textAlign: "center" }}
                 onClose={() => setAlertShow(false)}>
-                <b>아래를 더블클릭하세요!</b>
+                <b>편집을 시작하려면 아래 파란 창을 클릭하세요!</b>
               </Alert>
               : ''
           }
@@ -200,6 +198,7 @@ function ComplexWriter(props) {
           />
           {/* file input (thumbnail) */}
           <br />
+          {/* TODO : ALERT THAT THUMBNAIL IS NOT EDITTABLE AFTERWARD,FOR NOW */}
           (선택)대표사진
           <input
             type="file"
@@ -229,16 +228,18 @@ function ComplexWriter(props) {
 const mapStateToProps = (state) => ({
   images: state.draft.images,
   code: state.draft.html,
-  invalidExt: state.draft.invalidExt,
+  invalid: state.draft.invalid,
   articleID: state.draft.articleID,
 });
 
 const mapDispatchToProps = (dispatch) => ({
   getImages: (id) => dispatch(fetchImages(id)),
   getHTML: (id) => dispatch(fetchHTML(id)),
-  post: (id, boardname, title, summary, thumbnail, html, images) => dispatch(
-    postArticle(id, boardname, title, summary, thumbnail, html, images),
-  ),
+  postArticle: (
+    id, boardname, title, summary, thumbnail, html, images,
+  ) => dispatch(postArticle(
+    id, boardname, title, summary, thumbnail, html, images,
+  )),
   editArticle: (id, title, summary, thumbnail, html) => dispatch(
     editArticle(id, title, summary, thumbnail, html),
   ),

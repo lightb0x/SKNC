@@ -7,16 +7,17 @@ import {
 } from '../action/types';
 
 const initialState = {
+  // INVARIABLE : {filename(string) : base64encoded(string)}
   images: {},
   html: '',
-  invalidExt: '',
+  invalid: [],
   articleID: '',
 };
 
 export default function (state = initialState, action) {
   switch (action.type) {
     case FETCH_IMG:
-      return { ...state, images: action.data, invalidExt: action.invalid };
+      return { ...state, images: action.data, invalid: action.invalid };
     case UPDATE_IMG: {
       let origState = state;
       origState.images[action.filename] = action.encoded;

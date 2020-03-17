@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -24,22 +26,21 @@ type articleListOption struct {
 }
 
 type articleForm struct {
-	Boardname string            `json:"boardname" binding:"required"`
-	Title     string            `json:"title" binding:"required"`
-	Content   string            `json:"content" binding:"required"`
-	Summary   string            `json:"summary" binding:"required"`
-	Thumbnail []byte            `json:"thumbnail"`
-	ThumbExt  string            `json:"thumbnailExt"`
-	Images    map[string][]byte `json:"images"`
-	DraftID   string            `json:"draftID" binding:"required"`
+	Boardname string   `json:"boardname" binding:"required"`
+	Title     string   `json:"title" binding:"required"`
+	Content   string   `json:"content" binding:"required"`
+	Summary   string   `json:"summary" binding:"required"`
+	Thumbnail string   `json:"thumbnail"`
+	Images    []string `json:"images"`
+	// TODO : change of def; []byte->string
+	DraftID string `json:"draftID" binding:"required"`
 }
 
 type editArticleForm struct {
 	Title     string `json:"title" binding:"required"`
 	Content   string `json:"content" binding:"required"`
 	Summary   string `json:"summary" binding:"required"`
-	Thumbnail []byte `json:"thumbnail"`
-	ThumbExt  string `json:"thumbnailExt"`
+	Thumbnail string `json:"thumbnail"`
 }
 
 func getArticleList(c *gin.Context) {
@@ -89,7 +90,7 @@ func getArticleList(c *gin.Context) {
 	}
 
 	var articles []Article
-	const selectQuery = "created_at, updated_at, title, summary, thumbnail, thumb_ext, count"
+	const selectQuery = "created_at, updated_at, title, summary, thumbnail, count"
 	var query *gorm.DB
 	if home {
 		query = db.Model(&Article{}).
@@ -119,19 +120,19 @@ func getArticleList(c *gin.Context) {
 	result := make([]map[string]interface{}, len(articles)+1)
 	var newLastTime time.Time
 	for _, article := range articles {
-		var writer User
-		asoc := db.Model(&article).Association("Writer").Find(&writer)
-		if asoc.Error != nil {
-			c.Status(http.StatusInternalServerError)
-			return
-		}
+		// var writer User
+		// asoc := db.Model(&article).Association("Writer").Find(&writer)
+		// if asoc.Error != nil {
+		// 	c.Status(http.StatusInternalServerError)
+		// 	return
+		// }
 
 		atc := map[string]interface{}{
-			"writer":    writer.Username,
+			// "writer":    writer.Username,
+			"writer":    article.Writer,
 			"title":     article.Title,
 			"summary":   article.Summary,
 			"thumbnail": article.Thumbnail,
-			"thumbExt":  article.ThumbExt,
 			"count":     article.Count,
 			"createdAt": article.CreatedAt,
 			"isUpdated": article.UpdatedAt.After(article.CreatedAt),
@@ -146,7 +147,20 @@ func getArticleList(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// heper function for postArticle
+func filenameToMIME(s string) string {
+	prefix := "data:image/"
+	suffix := ";base64,"
+	switch s[strings.LastIndex(s, ".")+1:] {
+	case "png":
+		return prefix + s + suffix
+	case "jpg", "jpeg":
+		return prefix + "jpeg" + suffix
+	default:
+		return ""
+	}
+}
+
+// helper function for postArticle
 func extToMIME(s string) string {
 	prefix := "data:image/"
 	suffix := ";base64,"
@@ -156,7 +170,7 @@ func extToMIME(s string) string {
 	case "jpeg", "jpg":
 		return prefix + "jpeg" + suffix
 	default:
-		return ""
+		return filenameToMIME(s)
 	}
 }
 
@@ -198,19 +212,6 @@ func postArticle(c *gin.Context) {
 		return
 	}
 
-	// thumbnail check
-	thumbnail := data.Thumbnail
-	if len(thumbnail) > 1<<24-1 {
-		c.JSON(http.StatusBadRequest,
-			gin.H{"error": "thumbnail is too big"})
-		return
-	}
-
-	thumbnailExt := data.ThumbExt
-	if checkExtToReturn(c, thumbnailExt) {
-		return
-	}
-
 	// boardname check
 	boardname := data.Boardname
 	switch boardname {
@@ -236,10 +237,21 @@ func postArticle(c *gin.Context) {
 		return
 	}
 
-	// ext check
+	// thumbnail check
+	thumbnail := data.Thumbnail
+	if checkImageToReturn(c, thumbnail) {
+		return
+	}
+	if len(thumbnail) > 1<<24-1 {
+		c.JSON(http.StatusBadRequest,
+			gin.H{"error": "thumbnail is too big"})
+		return
+	}
+
+	// images check
 	images := data.Images
-	for key := range images {
-		if checkExtToReturn(c, key) {
+	for _, value := range images {
+		if checkImageToReturn(c, value) {
 			return
 		}
 	}
@@ -247,7 +259,8 @@ func postArticle(c *gin.Context) {
 	username := s.Get(userkey)
 	// writer
 	var writer User
-	query := db.Model(&User{}).Where("username = ?", username).First(&writer)
+	query := db.Model(&User{}).Where("username = ?", username.(string)).
+		First(&writer)
 	if query.Error != nil {
 		c.Status(http.StatusInternalServerError)
 		return
@@ -258,17 +271,18 @@ func postArticle(c *gin.Context) {
 		return
 	}
 
-	for key := range images {
+	filePath := "./archive/" + draftID + "/media"
+	files, readErr := ioutil.ReadDir(filePath)
+	if readErr != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": readErr.Error()})
+		return
+	}
+
+	// TODO : Image is not created!
+	for key, value := range images {
 		// store images on DB
-		mime := extToMIME(key)
-		if mime == "" {
-			c.JSON(http.StatusBadRequest,
-				gin.H{"error": "Invalid extension : " + key})
-			return
-		}
 		img := Image{
-			Ext:     mime,
-			Content: images[key],
+			Content: value,
 		}
 		if create := db.Create(&img); create.Error != nil {
 			c.Status(http.StatusInternalServerError)
@@ -276,20 +290,21 @@ func postArticle(c *gin.Context) {
 		}
 		// and fix html image source
 		// /archive/:uid/media/image1.jpeg -> /api/v1/article/:id
-		path := "/archive/" + draftID + "/media/" + key
-		strings.Replace(content, path,
+		path := "/archive/" + draftID + "/media/" + files[key-1].Name()
+		fmt.Println(path)
+		content = strings.Replace(content, path,
 			"/api/v1/image/"+string(img.ID),
 			strings.Count(content, path))
+		fmt.Println(content)
 	}
 
 	newArticle := Article{
 		Boardname: boardname,
-		Writer:    writer,
+		Writer:    username.(string),
 		Title:     title,
 		Content:   content,
 		Summary:   summary,
 		Thumbnail: thumbnail,
-		ThumbExt:  thumbnailExt,
 		Count:     0,
 		DraftID:   draftID,
 	}
@@ -301,6 +316,7 @@ func postArticle(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": newArticle.ID})
 }
 
+// TODO : getEditArticle (IMAGES SHOULD BE DIFFERENT!)
 func getArticle(c *gin.Context) {
 	id := convertIDToReturn(c)
 	if id == 0 {
@@ -315,21 +331,15 @@ func getArticle(c *gin.Context) {
 		c.Status(http.StatusNotFound)
 		return
 	}
-	var writer User
-	userQuery := db.Model(&article).Association("Writer").Find(&writer)
-	if userQuery.Error != nil {
-		c.Status(http.StatusInternalServerError)
-		return
-	}
 
 	var cmts []Comment
-	commentQuery := db.Model(&article).Association("Comments").Find(&cmts)
-	if commentQuery.Error != nil {
-		c.Status(http.StatusInternalServerError)
-		return
+
+	var comments []map[string]interface{}
+	if q := db.Model(&Comment{}).Where("ArticleRefer = ?", article.ID).Find(&cmts); q.Error == nil {
+		// there are comments
+		comments = make([]map[string]interface{}, len(cmts))
 	}
 
-	var comments = make([]map[string]interface{}, len(cmts))
 	for _, cmt := range cmts {
 		comment := map[string]interface{}{
 			"writer":    cmt.Writer,
@@ -342,7 +352,7 @@ func getArticle(c *gin.Context) {
 
 	result := map[string]interface{}{
 		"boardname": article.Boardname,
-		"writer":    writer.Username,
+		"writer":    article.Writer,
 		"title":     article.Title,
 		"content":   article.Content,
 		"comments":  comments,
@@ -406,14 +416,12 @@ func editArticle(c *gin.Context) {
 
 	// thumbnail check
 	thumbnail := data.Thumbnail
+	if checkImageToReturn(c, thumbnail) {
+		return
+	}
 	if len(thumbnail) > 1<<24-1 {
 		c.JSON(http.StatusBadRequest,
 			gin.H{"error": "thumbnail is too big"})
-		return
-	}
-
-	thumbnailExt := data.ThumbExt
-	if checkExtToReturn(c, thumbnailExt) {
 		return
 	}
 
@@ -423,7 +431,9 @@ func editArticle(c *gin.Context) {
 		return
 	}
 	var writer User
-	query := db.Model(&article).Association("Writer").Find(&writer)
+	// query := db.Model(&article).Association("Writer").Find(&writer)
+	query := db.Model(&User{}).Where("username = ?", article.Writer).
+		First(&writer)
 	if query.Error != nil {
 		c.Status(http.StatusInternalServerError)
 		return
@@ -454,7 +464,6 @@ func editArticle(c *gin.Context) {
 		Content:   content,
 		Summary:   summary,
 		Thumbnail: thumbnail,
-		ThumbExt:  thumbnailExt,
 	})
 	if update.Error != nil {
 		c.Status(http.StatusInternalServerError)
@@ -498,7 +507,9 @@ func fetchImage(c *gin.Context) {
 	// i := strings.Index("data:image/jpeg;base64,", ":")
 	// j := strings.Index("data:image/jpeg;base64,", ";")
 	// fmt.Println(st[i+1:j])
-	i := strings.Index(image.Ext, ":")
-	j := strings.Index(image.Ext, ";")
-	c.Data(http.StatusOK, image.Ext[i+1:j], image.Content)
+	// i := strings.Index(image.Ext, ":")
+	// j := strings.Index(image.Ext, ";")
+	// c.Data(http.StatusOK, image.Ext[i+1:j], image.Content)
+	// TODO : TEST
+	c.String(http.StatusOK, image.Content)
 }

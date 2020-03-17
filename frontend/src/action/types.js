@@ -12,6 +12,7 @@ export const POST_ARTICLE = 'POST_ARTICLE';
 export const FETCH_ARTICLE = 'FETCH_ARTICLE';
 export const EDIT_ARTICLE = 'EDIT_ARTICLE';
 export const DELETE_ARTICLE = 'DELETE_ARTICLE';
+export const ERROR_ARTICLE = 'ERROR_ARTICLE';
 
 // local (article -> comment)
 export const FETCH_COMMENTS = 'FETCH_COMMENTS';
