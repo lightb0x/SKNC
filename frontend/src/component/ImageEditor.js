@@ -15,6 +15,7 @@ import PropTypes from 'prop-types';
 
 import 'react-image-crop/dist/ReactCrop.css';
 
+// TODO : crop error on some photos; cropped improperly
 function ImageEditor(props) {
   const { filename, images, updateImage } = props;
   const [crop, setCrop] = useState({ unit: '%', width: 100, height: 100 });

@@ -32,6 +32,9 @@ export const fetchArticleList = (boardname, searchType, searchKeyword,
     })
   };
 
+// TODO : image definition changed
+// TODO : add extensions
+// TODO : base64 decode before sending ?
 export const postArticle = (
   draftID, boardname, title, summary, thumbnail, html, images,
 ) => (dispatch) => {
@@ -57,12 +60,13 @@ export const postArticle = (
     sendImages.push(prefix + images[item]);
     return null;
   });
+  console.log(sendImages);
   axios.post(v1port + '/article', thumbnail
     ? {
       draftID, boardname, title, content: html, summary, thumbnail,
-      sendImages
+      images: sendImages,
     }
-    : { draftID, boardname, title, content: html, summary, sendImages }
+    : { draftID, boardname, title, content: html, summary, images: sendImages }
   ).then((res) => {
     // history.push('/'+res.data.message)
     dispatch({

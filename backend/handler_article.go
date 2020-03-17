@@ -26,21 +26,22 @@ type articleListOption struct {
 }
 
 type articleForm struct {
-	Boardname string   `json:"boardname" binding:"required"`
-	Title     string   `json:"title" binding:"required"`
-	Content   string   `json:"content" binding:"required"`
-	Summary   string   `json:"summary" binding:"required"`
-	Thumbnail string   `json:"thumbnail"`
-	Images    []string `json:"images"`
-	// TODO : change of def; []byte->string
-	DraftID string `json:"draftID" binding:"required"`
+	Boardname string            `json:"boardname" binding:"required"`
+	Title     string            `json:"title" binding:"required"`
+	Content   string            `json:"content" binding:"required"`
+	Summary   string            `json:"summary" binding:"required"`
+	Thumbnail []byte            `json:"thumbnail"`
+	ThumbExt  string            `json:"thumbnailExt"`
+	Images    map[string][]byte `json:"images"`
+	DraftID   string            `json:"draftID" binding:"required"`
 }
 
 type editArticleForm struct {
 	Title     string `json:"title" binding:"required"`
 	Content   string `json:"content" binding:"required"`
 	Summary   string `json:"summary" binding:"required"`
-	Thumbnail string `json:"thumbnail"`
+	Thumbnail []byte `json:"thumbnail"`
+	ThumbExt  string `json:"thumbnailExt"`
 }
 
 func getArticleList(c *gin.Context) {
@@ -278,7 +279,6 @@ func postArticle(c *gin.Context) {
 		return
 	}
 
-	// TODO : Image is not created!
 	for key, value := range images {
 		// store images on DB
 		img := Image{
@@ -290,12 +290,11 @@ func postArticle(c *gin.Context) {
 		}
 		// and fix html image source
 		// /archive/:uid/media/image1.jpeg -> /api/v1/article/:id
-		path := "/archive/" + draftID + "/media/" + files[key-1].Name()
-		fmt.Println(path)
+		path := "/archive/" + draftID + "/media/" + files[key].Name()
+		fmt.Println("/api/v1/image/" + fmt.Sprintf("%d", img.ID))
 		content = strings.Replace(content, path,
-			"/api/v1/image/"+string(img.ID),
+			"/api/v1/image/"+fmt.Sprintf("%d", img.ID),
 			strings.Count(content, path))
-		fmt.Println(content)
 	}
 
 	newArticle := Article{
@@ -460,10 +459,11 @@ func editArticle(c *gin.Context) {
 	// update article on DB
 	// only non-blank and updated values are updated
 	update := db.Model(&article).Updates(Article{
-		Title:     title,
-		Content:   content,
-		Summary:   summary,
-		Thumbnail: thumbnail,
+		Title:        title,
+		Content:      content,
+		Summary:      summary,
+		Thumbnail:    thumbnail,
+		ThumbnailExt: thumbnailExt,
 	})
 	if update.Error != nil {
 		c.Status(http.StatusInternalServerError)
@@ -504,12 +504,5 @@ func fetchImage(c *gin.Context) {
 		c.Status(http.StatusNotFound)
 		return
 	}
-	// i := strings.Index("data:image/jpeg;base64,", ":")
-	// j := strings.Index("data:image/jpeg;base64,", ";")
-	// fmt.Println(st[i+1:j])
-	// i := strings.Index(image.Ext, ":")
-	// j := strings.Index(image.Ext, ";")
-	// c.Data(http.StatusOK, image.Ext[i+1:j], image.Content)
-	// TODO : TEST
-	c.String(http.StatusOK, image.Content)
+	c.Data(http.StatusOK, image.Ext, image.Content)
 }
